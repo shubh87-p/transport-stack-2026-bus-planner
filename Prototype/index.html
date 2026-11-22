@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delhi Bus Traffic Model & Journey Planner | Transport Stack Hackathon 2026</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-alt: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #ef4444;
+      --purple: #8b5cf6;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .brand-title h1 {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .brand-title p {
+      font-size: 11.5px;
+      color: #bfdbfe;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: #60a5fa;
+      color: #fff;
+    }
+
+    /* Main Workspace Layout */
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 500px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .map-pane {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    #map {
+      flex: 1;
+      width: 100%;
+      background: #0b1120;
+    }
+    .leaflet-tile-pane {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+
+    /* Search Form */
+    .search-box {
+      padding: 16px;
+      background: #162033;
+      border-bottom: 1px solid var(--border);
+    }
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .pill {
+      font-size: 11px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      padding: 4px 9px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .pill:hover {
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group.full {
+      grid-column: span 2;
+    }
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.4px;
+    }
+    input, select {
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .btn-primary {
+      flex: 1;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    .btn-secondary {
+      background: #334155;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Journey Cards */
+    .results-container {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .query-banner {
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .journey-card {
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .journey-card:hover {
+      border-color: #64748b;
+    }
+    .journey-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .tag-badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      margin-bottom: 5px;
+    }
+    .route-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .route-pill {
+      font-weight: 800;
+      font-size: 13px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .time-block {
+      text-align: right;
+    }
+    .total-min {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .eta-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* Quiet Hour Comparison Bar */
+    .traffic-box {
+      background: #1e293b;
+      border-left: 3px solid var(--amber);
+      border-radius: 5px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .traffic-box.low-traffic {
+      border-left-color: var(--emerald);
+    }
+    .traffic-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .traffic-delay-pill {
+      color: #fbbf24;
+      font-weight: 700;
+    }
+    .traffic-box.low-traffic .traffic-delay-pill {
+      color: #34d399;
+    }
+
+    /* Steps Timeline */
+    .steps-list {
+      border-top: 1px solid #1e293b;
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 12px;
+    }
+    .step-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .step-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .meta-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #334155;
+      font-size: 11px;
+      text-align: center;
+    }
+    .metric-cell {
+      background: #162033;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .metric-val {
+      font-weight: 700;
+      color: #e2e8f0;
+      display: block;
+    }
+    .metric-lbl {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    /* Map Bottom Drawer: Hourly Curve & Segment Breakdown */
+    .map-overlay-bar {
+      background: rgba(15, 23, 42, 0.94);
+      border-top: 1px solid var(--border);
+      padding: 12px 18px;
+      height: 215px;
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr;
+      gap: 18px;
+      overflow-y: auto;
+    }
+    .overlay-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .bars-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 125px;
+      padding-top: 16px;
+      border-bottom: 1px solid #334155;
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-fill {
+      width: 100%;
+      background: #3b82f6;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.2s;
+      min-height: 6px;
+    }
+    .bar-fill.active-hour {
+      background: #f59e0b;
+    }
+    .bar-fill.quiet-hour {
+      background: #10b981;
+    }
+    .bar-lbl {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .seg-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .seg-table th {
+      text-align: left;
+      color: var(--muted);
+      padding: 4px 6px;
+      border-bottom: 1px solid #334155;
+    }
+    .seg-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    /* Fullscreen Modal Panels for Validation & API Docs */
+    .full-panel {
+      display: none;
+      flex: 1;
+      padding: 24px 32px;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+    .full-panel.active {
+      display: block;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin: 16px 0 24px 0;
+    }
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .kpi-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: #60a5fa;
+      margin-top: 4px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .data-table th {
+      background: #1e3a8a;
+      color: #fff;
+      text-align: left;
+      padding: 10px 14px;
+    }
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    pre {
+      background: #090d16;
+      border: 1px solid #334155;
+      padding: 14px;
+      border-radius: 8px;
+      color: #a7f3d0;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      max-height: 460px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">TRANSPORT STACK 2026</div>
+      <div class="brand-title">
+        <h1>Delhi Real-Time Bus Traffic Model &amp; Journey Planner</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEW 1: Interactive Journey Planner & Map -->
+  <div id="view-planner" class="workspace">
+    <div class="sidebar">
+      <div class="search-box">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Origin (Bus Stop Name or lat, lng Coordinates)</label>
+            <input id="inp-from" list="stops-datalist" value="Kashmere Gate ISBT" placeholder="e.g. Kashmere Gate ISBT or 28.6675, 77.2282" />
+          </div>
+          <div class="form-group full">
+            <label>Destination (Bus Stop Name or lat, lng Coordinates)</label>
+            <input id="inp-to" list="stops-datalist" value="Nehru Place Terminal" placeholder="e.g. Nehru Place Terminal or 28.5494, 77.2519" />
+          </div>
+          <div class="form-group">
+            <label>Departure Time (IST)</label>
+            <input id="inp-time" type="time" value="08:30" />
+          </div>
+          <div class="form-group">
+            <label>Day of Week</label>
+            <select id="inp-date">
+              <option value="2026-11-23">Monday (Weekday)</option>
+              <option value="2026-11-24" selected>Tuesday (Weekday)</option>
+              <option value="2026-11-25">Wednesday (Weekday)</option>
+              <option value="2026-11-26">Thursday (Weekday)</option>
+              <option value="2026-11-27">Friday (Weekday)</option>
+              <option value="2026-11-28">Saturday (Weekend)</option>
+              <option value="2026-11-22">Sunday (Weekend)</option>
+            </select>
+          </div>
+        </div>
+        <datalist id="stops-datalist"></datalist>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="runJourneySearch()">Predict Travel Time &amp; Plan Journey</button>
+          <button class="btn-secondary" onclick="toggleLiveBuses()">Toggle Live GTFS-RT Buses</button>
+        </div>
+      </div>
+
+      <div id="results-area" class="results-container"></div>
+    </div>
+
+    <div class="map-pane">
+      <div id="map"></div>
+      <div class="map-overlay-bar">
+        <div>
+          <div class="overlay-title">
+            <span>24-Hour Travel Time Profile (Effect of Hour-of-Day Traffic)</span>
+            <span id="chart-subtitle" style="color:#cbd5e1; font-weight:400;">Amber = Selected Hour | Green = 11 PM Quiet Hour</span>
+          </div>
+          <div id="hourly-chart" class="bars-chart"></div>
+        </div>
+        <div>
+          <div class="overlay-title">
+            <span>Stop-to-Stop Segment Speed &amp; Bayesian Live+Historical Blend</span>
+            <span id="seg-subtitle" style="color:#cbd5e1; font-weight:400;">Selected Route Option</span>
+          </div>
+          <div style="max-height:145px; overflow-y:auto;">
+            <table class="seg-table">
+              <thead>
+                <tr>
+                  <th>Road Stretch (Stop &rarr; Stop)</th>
+                  <th>Dist</th>
+                  <th>Speed</th>
+                  <th>Cruise+Dwell</th>
+                  <th>Sched vs Model</th>
+                  <th>Source (&alpha;)</th>
+                </tr>
+              </thead>
+              <tbody id="segment-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Validation Benchmark Report -->
+  <div id="view-validation" class="full-panel">
+    <h2>Validation Report: Model Predictions vs. Observed DTC Bus Trips &amp; Google Maps</h2>
+    <p style="color:var(--muted); margin-top:4px;">
+      Evaluated across major Delhi Origin–Destination corridors during weekday morning peak, evening peak, midday off-peak, quiet night hours, and weekends.
+    </p>
+    <div id="val-kpis" class="kpi-grid"></div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Origin &rarr; Destination Corridor</th>
+          <th>Departure Window</th>
+          <th>Route</th>
+          <th>Static GTFS Timetable</th>
+          <th>Quiet Hour (11 PM)</th>
+          <th>Our Model Prediction</th>
+          <th>Observed Bus Trip</th>
+          <th>Google Maps Transit</th>
+          <th>Error vs Observed</th>
+        </tr>
+      </thead>
+      <tbody id="val-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- VIEW 3: REST API Explorer & Technical Note -->
+  <div id="view-api" class="full-panel">
+    <h2>Documented REST API &amp; Technical Note</h2>
+    <p style="color:var(--muted); margin-top:4px; margin-bottom:16px;">
+      Live JSON response from <code style="color:#93c5fd;">GET /journeys?from=...&amp;to=...&amp;depart=...</code> alongside system methodology.
+    </p>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div>
+        <h3 style="margin-bottom:8px; color:#93c5fd;">Live JSON Response (<span id="api-url-display">/journeys</span>)</h3>
+        <pre id="api-json-box">Loading...</pre>
+      </div>
+      <div style="background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:18px; line-height:1.55; font-size:13.5px;">
+        <h3 style="color:#60a5fa; margin-bottom:10px;">Technical Note: Methodology, Assumptions &amp; Fallback</h3>
+        <p style="margin-bottom:10px;">
+          <strong>1. Linking Noisy GPS Points to Routes (Map-Matching):</strong> Raw GPS logs from <code>bus_movements_YYYY_MM_DD.db</code> exhibit urban drift and occasional dropouts. We reject velocity outliers (&gt;80 km/h) and points &gt;150m from the route polyline in <code>shapes.txt</code>, then project each valid ping orthogonally onto the directed stop-to-stop segment to compute monotonic distance-along-route $d(t)$.
+        </p>
+        <p style="margin-bottom:10px;">
+          <strong>2. Separating Cruise Time vs. Stop &amp; Signal Waiting:</strong> Buses spend 15–35% of total journey time stationary at bus stops and signalized intersections (e.g., ITO, Ashram Chowk, Dhaula Kuan). Using a 40m stop proximity buffer, our SQLite historical profiler decomposes segment duration into <em>road link cruise time</em> and <em>stop/signal dwell time</em>.
+        </p>
+        <p style="margin-bottom:10px;">
+          <strong>3. Combining Live GTFS-RT &amp; Historical Data (Sparse Fallback):</strong> Multiple bus routes share physical road corridors. We pool live segment traversals across all routes sharing edge $e$ in the past 20 minutes ($N_e$ vehicles) and blend with the historical $(e, \text{hour}, \text{day\_type})$ profile via Empirical Bayes shrinkage:
+          <br/><code style="display:block; background:#0f172a; padding:8px; border-radius:4px; margin:6px 0; color:#fcd34d;">T_est(e,t) = [N_e / (N_e + 4)] * T_live(e,t) + [4 / (N_e + 4)] * T_hist(e,h,d)</code>
+          When a road has zero live buses at night ($N_e = 0 \Rightarrow \alpha = 0$), the estimator smoothly falls back to the historical time-of-day profile without instability.
+        </p>
+        <p>
+          <strong>4. Time-Dependent Routing &amp; Quiet-Hour Traffic Comparison:</strong> Our RAPTOR-based journey planner advances the virtual clock at each stop along candidate direct and 1-transfer routes, and simultaneously evaluates the exact same path at 23:00 (11 PM Quiet Hour) to quantify traffic delay in minutes.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let map;
+    let routeLayers = [];
+    let stopMarkers = [];
+    let liveBusMarkers = [];
+    let showLiveBuses = true;
+    let currentResponse = null;
+
+    function initMap() {
+      map = L.map('map').setView([28.6139, 77.2295], 12);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+    }
+
+    async function loadStopsAutocomplete() {
+      const res = await fetch('/api/stops');
+      const data = await res.json();
+      const dl = document.getElementById('stops-datalist');
+      dl.innerHTML = data.stops.map(s => `<option value="${s.stop_name}">${s.zone_id} Delhi (${s.stop_id})</option>`).join('');
+    }
+
+    function switchView(viewName, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-planner').style.display = viewName === 'planner' ? 'flex' : 'none';
+      document.getElementById('view-validation').classList.toggle('active', viewName === 'validation');
+      document.getElementById('view-api').classList.toggle('active', viewName === 'api');
+      if (viewName === 'planner' && map) {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+      if (viewName === 'validation') {
+        loadValidationReport();
+      }
+    }
+
+    function loadPreset(from, to, time, date) {
+      document.getElementById('inp-from').value = from;
+      document.getElementById('inp-to').value = to;
+      document.getElementById('inp-time').value = time;
+      document.getElementById('inp-date').value = date;
+      runJourneySearch();
+    }
+
+    async function runJourneySearch() {
+      const from = document.getElementById('inp-from').value.trim();
+      const to = document.getElementById('inp-to').value.trim();
+      const time = document.getElementById('inp-time').value || '08:30';
+      const date = document.getElementById('inp-date').value || '2026-11-24';
+      const departIso = `${date}T${time}:00+05:30`;
+
+      const apiUrl = `/journeys?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&depart=${encodeURIComponent(departIso)}`;
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+      currentResponse = data;
+
+      renderJourneyCards(data);
+      renderHourlyChart(data.hourly_travel_time_curve || [], parseInt(time.split(':')[0], 10));
+      if (data.journeys && data.journeys.length > 0) {
+        selectJourneyOption(0);
+      }
+      refreshLiveBuses(parseInt(time.split(':')[0], 10));
+    }
+
+    function renderJourneyCards(data) {
+      const container = document.getElementById('results-area');
+      if (data.error || !data.journeys || data.journeys.length === 0) {
+        container.innerHTML = `<div class="query-banner" style="border-color:#ef4444;">No bus journeys found. Try another stop pair.</div>`;
+        return;
+      }
+
+      const q = data.query;
+      let html = `
+        <div class="query-banner">
+          <div>
+            <strong>${q.resolved_origin.name}</strong> &rarr; <strong>${q.resolved_destination.name}</strong>
+            <div style="color:var(--muted); font-size:11px;">Departing ${q.departure_time} IST (${q.day_of_week}) &bull; ${data.options_count} options ranked</div>
+          </div>
+        </div>
+      `;
+
+      data.journeys.forEach((j, idx) => {
+        const routePills = j.legs.map(l =>
+          `<span class="route-pill" style="background:${l.route_color}">BUS ${l.route_short_name}</span>`
+        ).join('<span style="color:var(--muted); font-weight:700;">&rarr;</span>');
+
+        const qComp = j.quiet_hour_comparison;
+        const isLowTraffic = qComp.traffic_delay_min <= 3;
+
+        const legsStepsHtml = j.legs.map((l, lIdx) => `
+          <div class="step-item">
+            <span class="step-dot" style="background:${l.route_color}"></span>
+            <div>
+              <strong>Board Bus ${l.route_short_name} (${l.agency_id})</strong> at <strong>${l.boarding_stop.stop_name}</strong> (${l.boarding_stop.departure_time})
+              <div style="color:var(--muted);">Ride ${l.intermediate_stops_count + 1} stops (${l.distance_km} km @ ${l.average_speed_kmh} km/h, ${l.in_vehicle_time_min} min on bus vs ${l.scheduled_timetable_min} min timetable) &rarr; Get off at <strong>${l.alighting_stop.stop_name}</strong> (${l.alighting_stop.arrival_time})</div>
+            </div>
+          </div>
+          ${lIdx < j.legs.length - 1 ? `
+          <div class="step-item">
+            <span class="step-dot" style="background:#f59e0b"></span>
+            <div style="color:#fcd34d;"><strong>Transfer at ${l.alighting_stop.stop_name}</strong> (~1.5 min walk + next bus wait)</div>
+          </div>` : ''}
+        `).join('');
+
+        html += `
+          <div class="journey-card ${idx === 0 ? 'selected' : ''}" id="jcard-${idx}" onclick="selectJourneyOption(${idx})">
+            <div class="card-top">
+              <div>
+                <span class="tag-badge">${j.recommendation_tag} &bull; ${j.transfers_count === 0 ? 'Direct' : j.transfers_count + ' Transfer'}</span>
+                <div class="route-pills">${routePills}</div>
+              </div>
+              <div class="time-block">
+                <div class="total-min">${j.total_time_min} min</div>
+                <div class="eta-sub">Arrive ${j.estimated_arrival_time} IST</div>
+              </div>
+            </div>
+
+            <div class="traffic-box ${isLowTraffic ? 'low-traffic' : ''}">
+              <div class="traffic-row">
+                <span>Quiet Hour Baseline (11:00 PM): <strong>${qComp.quiet_hour_total_min} min</strong></span>
+                <span class="traffic-delay-pill">
+                  ${qComp.traffic_delay_min > 0 ? `+${qComp.traffic_delay_min} min traffic delay (+${qComp.traffic_impact_percent}%)` : 'Free-flow speed (0 min delay)'}
+                </span>
+              </div>
+              <div style="color:var(--muted); font-size:11px;">Static Timetable says ${j.scheduled_timetable_total_min} min &bull; Model Cruise: ${j.cruise_time_min}m + Stop/Signal Dwell: ${j.stop_and_signal_dwell_min}m</div>
+            </div>
+
+            <div class="steps-list">
+              <div class="step-item">
+                <span class="step-dot" style="background:#94a3b8"></span>
+                <div>Walk <strong>${j.access_walk.distance_m} m (${j.access_walk.duration_min} min)</strong> to boarding stop <strong>${j.access_walk.to_stop_name}</strong></div>
+              </div>
+              ${legsStepsHtml}
+              <div class="step-item">
+                <span class="step-dot" style="background:#10b981"></span>
+                <div>Walk <strong>${j.egress_walk.distance_m} m (${j.egress_walk.duration_min} min)</strong> from <strong>${j.egress_walk.from_stop_name}</strong> to destination</div>
+              </div>
+            </div>
+
+            <div class="meta-metrics">
+              <div class="metric-cell"><span class="metric-val">${j.in_vehicle_time_min} min</span><span class="metric-lbl">Time on Bus</span></div>
+              <div class="metric-cell"><span class="metric-val">${j.total_walk_min} min</span><span class="metric-lbl">Total Walk</span></div>
+              <div class="metric-cell"><span class="metric-val">${j.total_wait_min} min</span><span class="metric-lbl">Bus Wait</span></div>
+              <div class="metric-cell"><span class="metric-val">${j.total_distance_km} km</span><span class="metric-lbl">Total Distance</span></div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function selectJourneyOption(idx) {
+      if (!currentResponse || !currentResponse.journeys[idx]) return;
+      document.querySelectorAll('.journey-card').forEach((el, i) => {
+        el.classList.toggle('selected', i === idx);
+      });
+
+      const journey = currentResponse.journeys[idx];
+      drawJourneyOnMap(journey, currentResponse.query);
+      renderSegmentTable(journey);
+    }
+
+    function drawJourneyOnMap(journey, query) {
+      routeLayers.forEach(l => map.removeLayer(l));
+      stopMarkers.forEach(m => map.removeLayer(m));
+      routeLayers = [];
+      stopMarkers = [];
+
+      const boundsPoints = [];
+
+      // Access walk dashed line
+      const firstStop = journey.legs[0].boarding_stop;
+      const walkStart = [query.resolved_origin.lat, query.resolved_origin.lon];
+      const walkBoard = [firstStop.lat, firstStop.lon];
+      const accessLine = L.polyline([walkStart, walkBoard], { color: '#94a3b8', weight: 3, dashArray: '6, 6' }).addTo(map);
+      routeLayers.push(accessLine);
+
+      // Draw each bus leg
+      journey.legs.forEach(leg => {
+        const poly = L.polyline(leg.polyline, {
+          color: leg.route_color,
+          weight: 6,
+          opacity: 0.9
+        }).addTo(map);
+        routeLayers.push(poly);
+
+        leg.stops_sequence.forEach((st, sIdx) => {
+          boundsPoints.push([st.lat, st.lon]);
+          const isEndpoint = sIdx === 0 || sIdx === leg.stops_sequence.length - 1;
+          const marker = L.circleMarker([st.lat, st.lon], {
+            radius: isEndpoint ? 7 : 4.5,
+            fillColor: isEndpoint ? '#ffffff' : leg.route_color,
+            color: leg.route_color,
+            weight: 2.5,
+            fillOpacity: 1
+          }).bindPopup(`<strong>${st.stop_name}</strong><br/>Route ${leg.route_short_name} (${st.stop_id})`).addTo(map);
+          stopMarkers.push(marker);
+        });
+      });
+
+      // Egress walk dashed line
+      const lastStop = journey.legs[journey.legs.length - 1].alighting_stop;
+      const walkEnd = [query.resolved_destination.lat, query.resolved_destination.lon];
+      const egressLine = L.polyline([[lastStop.lat, lastStop.lon], walkEnd], { color: '#10b981', weight: 3, dashArray: '6, 6' }).addTo(map);
+      routeLayers.push(egressLine);
+
+      if (boundsPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(boundsPoints), { padding: [40, 40] });
+      }
+    }
+
+    function renderSegmentTable(journey) {
+      const tbody = document.getElementById('segment-tbody');
+      const allSegs = [];
+      journey.legs.forEach(l => {
+        l.segments.forEach(s => allSegs.push({ route: l.route_short_name, ...s }));
+      });
+
+      document.getElementById('seg-subtitle').textContent =
+        `Option #${journey.option_id}: ${journey.legs.map(l => 'Bus ' + l.route_short_name).join(' -> ')} (${allSegs.length} road links)`;
+
+      tbody.innerHTML = allSegs.map(s => {
+        const speedColor = s.speed_kmh < 15 ? '#f87171' : (s.speed_kmh < 22 ? '#fbbf24' : '#34d399');
+        return `
+          <tr>
+            <td><strong>[${s.route}]</strong> ${s.from_stop_name.split('/')[0]} &rarr; ${s.to_stop_name.split('/')[0]}</td>
+            <td>${s.distance_km} km</td>
+            <td style="color:${speedColor}; font-weight:700;">${s.speed_kmh} km/h</td>
+            <td>${s.cruise_sec}s + ${s.dwell_sec}s dwell</td>
+            <td>${Math.round(s.scheduled_sec/60*10)/10}m &rarr; <strong>${Math.round(s.predicted_sec/60*10)/10}m</strong></td>
+            <td><span style="color:#93c5fd;">&alpha;=${s.alpha_weight}</span> (N=${s.live_bus_samples})</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderHourlyChart(curve, activeHour) {
+      const chart = document.getElementById('hourly-chart');
+      if (!curve || curve.length === 0) {
+        chart.innerHTML = '';
+        return;
+      }
+      const maxMin = Math.max(...curve.map(c => c.total_time_min), 1);
+      chart.innerHTML = curve.map((c, idx) => {
+        const pct = Math.max(12, Math.round((c.total_time_min / maxMin) * 100));
+        const cls = idx === activeHour ? 'active-hour' : (idx === 23 ? 'quiet-hour' : '');
+        return `
+          <div class="bar-col" title="${c.hour} IST: ${c.total_time_min} min total">
+            <div style="font-size:8.5px; color:#cbd5e1; margin-bottom:2px;">${c.total_time_min}</div>
+            <div class="bar-fill ${cls}" style="height:${pct}%"></div>
+            <div class="bar-lbl">${String(idx).padStart(2, '0')}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function refreshLiveBuses(hour = 8) {
+      liveBusMarkers.forEach(m => map.removeLayer(m));
+      liveBusMarkers = [];
+      if (!showLiveBuses) return;
+
+      const res = await fetch(`/api/gtfs-rt/vehicles?hour=${hour}`);
+      const feed = await res.json();
+      feed.entity.forEach(v => {
+        const marker = L.circleMarker([v.latitude, v.longitude], {
+          radius: 4,
+          fillColor: '#38bdf8',
+          color: '#0284c7',
+          weight: 1.5,
+          fillOpacity: 0.85
+        }).bindPopup(`
+          <strong>Live GTFS-RT Bus: ${v.vehicle_id}</strong><br/>
+          Route: <strong>${v.route_short_name}</strong> (&rarr; ${v.headsign})<br/>
+          Live Speed: <strong>${v.speed_kmh} km/h</strong><br/>
+          Next Stop: ${v.next_stop_name}
+        `).addTo(map);
+        liveBusMarkers.push(marker);
+      });
+    }
+
+    function toggleLiveBuses() {
+      showLiveBuses = !showLiveBuses;
+      const h = parseInt((document.getElementById('inp-time').value || '08:30').split(':')[0], 10);
+      refreshLiveBuses(h);
+    }
+
+    async function loadValidationReport() {
+      const res = await fetch('/api/validation');
+      const data = await res.json();
+      const m = data.summary_metrics;
+
+      document.getElementById('val-kpis').innerHTML = `
+        <div class="kpi-card">
+          <div style="font-size:11px; color:var(--muted);">MAE vs. Observed Bus Trips</div>
+          <div class="kpi-num" style="color:#34d399;">${m.mae_vs_observed_trips_min} min</div>
+        </div>
+        <div class="kpi-card">
+          <div style="font-size:11px; color:var(--muted);">MAPE vs. Observed Trips</div>
+          <div class="kpi-num" style="color:#34d399;">${m.mape_vs_observed_trips_pct}%</div>
+        </div>
+        <div class="kpi-card">
+          <div style="font-size:11px; color:var(--muted);">MAE vs. Google Maps Transit</div>
+          <div class="kpi-num">${m.mae_vs_google_maps_min} min</div>
+        </div>
+        <div class="kpi-card">
+          <div style="font-size:11px; color:var(--muted);">Static Timetable MAE</div>
+          <div class="kpi-num" style="color:#f87171;">${m.static_timetable_mae_min} min</div>
+        </div>
+        <div class="kpi-card">
+          <div style="font-size:11px; color:var(--muted);">Error Reduction vs. Timetable</div>
+          <div class="kpi-num" style="color:#fbbf24;">+${m.accuracy_improvement_over_timetable_pct}%</div>
+        </div>
+      `;
+
+      document.getElementById('val-tbody').innerHTML = data.benchmarks.map(b => `
+        <tr>
+          <td>${b.id}</td>
+          <td><strong>${b.from}</strong> &rarr; <strong>${b.to}</strong></td>
+          <td>${b.time_label}</td>
+          <td><span style="background:#1d4ed8; padding:2px 7px; border-radius:4px; font-weight:700;">Bus ${b.primary_route}</span></td>
+          <td style="color:#94a3b8;">${b.static_gtfs_timetable_min} min</td>
+          <td style="color:#34d399;">${b.quiet_hour_baseline_min} min</td>
+          <td style="font-weight:800; color:#60a5fa;">${b.our_model_predicted_min} min</td>
+          <td style="font-weight:700;">${b.observed_bus_trip_min} min</td>
+          <td>${b.google_maps_transit_min} min</td>
+          <td style="color:#34d399; font-weight:700;">&plusmn;${b.abs_error_vs_observed_min} min (Static err: ${b.static_gtfs_error_min}m)</td>
+        </tr>
+      `).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      initMap();
+      await loadStopsAutocomplete();
+      await runJourneySearch();
+    });
+  </script>
+</body>
+</html>
