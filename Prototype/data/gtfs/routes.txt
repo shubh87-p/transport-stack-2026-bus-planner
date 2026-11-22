@@ -1,0 +1,13 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_color
+DTC_425,DTC,425,"Kashmere Gate ISBT - Nehru Place Terminal (via ITO & Ashram)",3,1D4ED8
+DTC_405,DTC,405,"Kashmere Gate ISBT - Badarpur Border (via Daryaganj, India Gate & Moolchand)",3,059669
+DTC_433,CLUSTER,433,"New Delhi Railway Station - Nehru Place Terminal (via Connaught Place & Lajpat Nagar)",3,D97706
+DTC_505,DTC,505,"Kashmere Gate ISBT - Qutub Minar / Mehrauli (via CP, AIIMS & Hauz Khas)",3,7C3AED
+DTC_OMS,DTC,OMS (+),"Outer Mudrika Service (Ring Road Circular: Kashmere Gate - AIIMS - Nehru Place - ITO)",3,DC2626
+DTC_534,DTC,534,"Anand Vihar ISBT - Qutub Minar (via Sarai Kale Khan, Ashram, Nehru Place & Saket)",3,0284C7
+DTC_729,CLUSTER,729,"Connaught Place - Dwarka Sector 10 (via Karol Bagh, Rajouri Garden & Janakpuri)",3,EA580C
+DTC_620,DTC,620,"Connaught Place - Vasant Vihar / Munirka (via Central Secretariat, Dhaula Kuan & IIT)",3,0D9488
+DTC_114,DTC,114,"Kashmere Gate ISBT - Rohini Sector 18 (via DU North Campus, Azadpur & Pitampura)",3,4F46E5
+DTC_307,CLUSTER,307,"Anand Vihar ISBT - Karol Bagh Terminal (via Laxmi Nagar, ITO & Connaught Place)",3,9333EA
+DTC_AIRPORT_EXP,DTC,EXP-4,"Kashmere Gate ISBT - IGI Airport Terminal 3 (via CP & Dhaula Kuan)",3,2563EB
+DTC_543,DTC,543,"Anand Vihar ISBT - AIIMS (via Mayur Vihar, Ashram, Lajpat Nagar & INA)",3,16A34A
