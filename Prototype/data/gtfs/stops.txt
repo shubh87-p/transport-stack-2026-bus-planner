@@ -1,0 +1,47 @@
+stop_id,stop_code,stop_name,stop_lat,stop_lon,zone_id
+DL_STOP_001,DL_STOP_001,"Kashmere Gate ISBT",28.667500,77.228200,North
+DL_STOP_002,DL_STOP_002,"Red Fort (Lal Qila)",28.656200,77.237000,Central
+DL_STOP_003,DL_STOP_003,"Delhi Gate / Daryaganj",28.641200,77.240500,Central
+DL_STOP_004,DL_STOP_004,"ITO Crossing",28.628500,77.241500,Central
+DL_STOP_005,DL_STOP_005,"Pragati Maidan / Supreme Court",28.620600,77.243500,Central
+DL_STOP_006,DL_STOP_006,"Mandi House",28.625800,77.234200,Central
+DL_STOP_007,DL_STOP_007,"Connaught Place (Rajiv Chowk)",28.632800,77.219700,Central
+DL_STOP_008,DL_STOP_008,"New Delhi Railway Station (Ajmeri Gate)",28.642500,77.221500,Central
+DL_STOP_009,DL_STOP_009,"India Gate / C-Hexagon",28.612900,77.229500,Central
+DL_STOP_010,DL_STOP_010,"Khan Market / Sujan Singh Park",28.600100,77.227500,Central
+DL_STOP_011,DL_STOP_011,"JLN Stadium / Lodhi Road",28.584600,77.233800,South
+DL_STOP_012,DL_STOP_012,"Lajpat Nagar Central Market",28.567700,77.243300,South
+DL_STOP_013,DL_STOP_013,"Moolchand Hospital",28.564400,77.234200,South
+DL_STOP_014,DL_STOP_014,"Kailash Colony",28.555200,77.242200,South
+DL_STOP_015,DL_STOP_015,"Nehru Place Terminal",28.549400,77.251900,South
+DL_STOP_016,DL_STOP_016,"Ashram Chowk (Ring Road)",28.571400,77.258800,South
+DL_STOP_017,DL_STOP_017,"Sarai Kale Khan ISBT",28.588900,77.256800,East-South
+DL_STOP_018,DL_STOP_018,"AIIMS / Safdarjung Hospital",28.567200,77.210000,South
+DL_STOP_019,DL_STOP_019,"INA Market / Dilli Haat",28.575400,77.209600,South
+DL_STOP_020,DL_STOP_020,"Central Secretariat / Udyog Bhawan",28.614700,77.211900,Central
+DL_STOP_021,DL_STOP_021,"Hauz Khas / IIT Delhi",28.545800,77.199500,South
+DL_STOP_022,DL_STOP_022,"Chirag Delhi",28.539800,77.228600,South
+DL_STOP_023,DL_STOP_023,"Saket District Centre",28.524500,77.216500,South
+DL_STOP_024,DL_STOP_024,"Qutub Minar / Mehrauli",28.524400,77.185500,South
+DL_STOP_025,DL_STOP_025,"Kalkaji Mandir / Okhla Phase 3",28.550300,77.260800,South
+DL_STOP_026,DL_STOP_026,"Govindpuri / Okhla Industrial Area",28.535600,77.263900,South
+DL_STOP_027,DL_STOP_027,"Badarpur Border",28.494500,77.303200,South
+DL_STOP_028,DL_STOP_028,"Civil Lines / Vidhan Sabha",28.681400,77.222500,North
+DL_STOP_029,DL_STOP_029,"Delhi University (North Campus)",28.690200,77.213600,North
+DL_STOP_030,DL_STOP_030,"GTB Nagar / Kingsway Camp",28.698100,77.206300,North
+DL_STOP_031,DL_STOP_031,"Azadpur Terminal",28.707700,77.179500,North
+DL_STOP_032,DL_STOP_032,"Netaji Subhash Place (Pitampura)",28.696100,77.152500,North-West
+DL_STOP_033,DL_STOP_033,"Rohini Sector 18 / Badli",28.738300,77.139800,North-West
+DL_STOP_034,DL_STOP_034,"Karol Bagh Terminal",28.644200,77.189500,West
+DL_STOP_035,DL_STOP_035,"Rajendra Place / Patel Nagar",28.645100,77.168500,West
+DL_STOP_036,DL_STOP_036,"Rajouri Garden Crossing",28.649200,77.122500,West
+DL_STOP_037,DL_STOP_037,"Janakpuri District Centre",28.628900,77.081500,West
+DL_STOP_038,DL_STOP_038,"Uttam Nagar Terminal",28.621900,77.058500,West
+DL_STOP_039,DL_STOP_039,"Dwarka Mor / Sector 10",28.592100,77.046200,South-West
+DL_STOP_040,DL_STOP_040,"Dhaula Kuan Ring Road",28.591800,77.161800,South-West
+DL_STOP_041,DL_STOP_041,"Vasant Vihar / Munirka",28.556200,77.168200,South-West
+DL_STOP_042,DL_STOP_042,"IGI Airport Terminal 3",28.556200,77.099900,South-West
+DL_STOP_043,DL_STOP_043,"Laxmi Nagar / Vikas Marg",28.630400,77.277500,East
+DL_STOP_044,DL_STOP_044,"Preet Vihar / Karkardooma",28.641500,77.295200,East
+DL_STOP_045,DL_STOP_045,"Anand Vihar ISBT",28.646900,77.316000,East
+DL_STOP_046,DL_STOP_046,"Mayur Vihar Phase 1",28.604500,77.291500,East
